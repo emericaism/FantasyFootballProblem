@@ -18,8 +18,10 @@ class FantasyFootball:
 		self.bestTeam = []
 		self.bestPoints = 0
 
-		self.salaryBound = 49500
-		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
+		self.salaryBound = 49700
+		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+
+
 		if self.objective==3:
 			self.objectiveName = "DK"
 		elif self.objective==2:
@@ -40,7 +42,7 @@ class FantasyFootball:
 
 	def importTeam(self):
 		os.chdir("..")
-		self.bestTeam = pickle.load(open("best.p","rb"))
+		self.bestTeam = pickle.load(open("best"+self.objectiveName+".p","rb"))
 
 	def useCurtailedPlayerLists(self):
 		self.qbs = self.qbs[10:15]
@@ -235,7 +237,7 @@ class FantasyFootball:
 		print "DKPoints",self.computeDKPoints(self.bestTeam)
 		print "TeamVar",self.computeTeamVariance(self.bestTeam)
 		print "$",self.computeTeamSalary(self.bestTeam)
-		pickle.dump(self.bestTeam,open("best.p","wb"))
+		pickle.dump(self.bestTeam,open("best"+self.objectiveName+".p","wb"))
 		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
 
 	def searchParetoImprovement(self,team):
