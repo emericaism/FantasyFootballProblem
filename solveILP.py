@@ -6,6 +6,7 @@ import random
 import datetime
 import cPickle as pickle
 
+
 class FantasyFootball:
 	def __init__(self):
 		self.qbs = []
@@ -17,13 +18,37 @@ class FantasyFootball:
 		self.bestTeam = []
 		self.bestPoints = 0
 
+		self.salaryBound = 49500
+		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+		if self.objective==3:
+			self.objectiveName = "DK"
+		elif self.objective==2:
+			self.objectiveName="NF"
+
+
+
 		self.importCSVsToBigList()
-		self.evaluateNtimes(50000000)
+
+
+		#self.useCurtailedPlayerLists()
+		self.importTeam()
+		self.evaluateNtimes(1000000)
 		#self.greedy()
 		#self.makeCombinations()
 		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
 		#print len(self.qbs)*len(self.rbs)**2*len(self.wrs)**3*len(self.tes)*len(self.flexes)*len(self.dsts)
 
+	def importTeam(self):
+		os.chdir("..")
+		self.bestTeam = pickle.load(open("best.p","rb"))
+
+	def useCurtailedPlayerLists(self):
+		self.qbs = self.qbs[10:15]
+		self.rbs = self.rbs[10:16]
+		self.wrs = self.wrs[10:16]
+		self.tes = self.tes[10:15]
+		self.dsts = self.dsts[10:15]
+		self.flexes = self.rbs+self.rbs+self.tes
 
 
 	def randomTeam(self):
@@ -40,11 +65,12 @@ class FantasyFootball:
 					break
 			team.append(flexChoice)
 			team.append(random.choice(self.dsts))
-			teamSalary = 0
 			teamSalary = self.computeTeamSalary(team)
-			if teamSalary<=50000:
+			if teamSalary<=50000 and teamSalary>=self.salaryBound:
 				isLegal=True
 
+
+		#print team,self.computeTeamPoints(team),self.computeTeamSalary(team)
 		return team
 
 
@@ -116,6 +142,22 @@ class FantasyFootball:
 				self.dsts.append(player)
 		self.flexes = self.rbs+self.wrs+self.tes
 
+		for playerList in [self.qbs,self.rbs,self.wrs,self.tes]:
+			for p in playerList:
+				p[0] = p[0][1:-4]
+				ciList = [float(x) for x in p[1].split('-')]
+				p[1] = ciList
+
+		for dst in self.dsts:
+			dst[0] = dst[0][1:-8]
+			if not dst[1][0] == '-':
+				ciList = [float(x) for x in dst[1].split('-')]
+			else:
+				ciList = [float(x) for x in dst[1][1:].split('-')]
+				ciList[0] = -1*ciList[0]
+			dst[1] = ciList
+
+
 		return None
 
 	def makeCombinations(self):
@@ -124,21 +166,34 @@ class FantasyFootball:
 		#	xrange(len(self.wrs)),xrange(len(self.wrs)),xrange(len(self.wrs)),
 		#	xrange(len(self.tes)),xrange(len(self.flexes)),xrange(len(self.dsts))]
 		some_list = [self.qbs[:5],self.rbs[:5],self.rbs[:5],self.wrs[:5],self.wrs[:5],self.wrs[:5],self.tes[:5],self.flexes[:5],self.dsts[:5]]
-		bigfucking = itertools.product(*some_list)
-		bigfuckinglist = []
-		for e in bigfucking:
-			bigfuckinglist.append(e)
+		bigfcking = itertools.product(*some_list)
+		bigfckinglist = []
+		for e in bigfcking:
+			bigfckinglist.append(e)
 		#print bigfuckinglist
-		print len(bigfuckinglist)
-		pickle.dump(bigfuckinglist,open("combos.p","wb"))
+		print len(bigfckinglist)
+		pickle.dump(bigfckinglist,open("combos.p","wb"))
 
 	#[QB,RB,RB,WR,WR,WR,TE,FLEX,DST]
 
 	def computeTeamPoints(self,team):
 		fpp = 0
 		for player in team:
-			fpp += player[3]
+			fpp += player[self.objective]
 		return fpp
+
+	def computeDKPoints(self,team):
+		fpp = 0
+		for player in team:
+			fpp+=player[3]
+		return fpp
+	
+	def computeNFPoints(self,team):
+		fpp = 0
+		for player in team:
+			fpp+=player[2]
+		return fpp
+
 
 	def computeTeamSalary(self,team):
 		teamSalary = 0
@@ -146,19 +201,41 @@ class FantasyFootball:
 			teamSalary+=player[4]
 		return teamSalary
 
+	def computeTeamVariance(self,team):
+		teamVar = 0
+		for player in team:
+			ci = player[1]
+			midpt = sum(ci) / float(len(ci))
+			var = ci[1]-midpt/1.96
+			teamVar+=var
+
+		return teamVar
+
 	def evaluateNtimes(self,N):
-		self.bestTeam = self.randomTeam()
+		#self.bestTeam = self.randomTeam()
 		self.bestPoints = self.computeTeamPoints(self.bestTeam)
 		betterExists = True
 		for i in xrange(N):
+			if i%100000==0:
+				print "Iteration: ",i
+				print "Maximize ", self.objectiveName
+				print "Team",self.bestTeam
+				print "NFPoints",self.computeNFPoints(self.bestTeam)
+				print "DKPoints",self.computeDKPoints(self.bestTeam)
+				print "TeamVar",self.computeTeamVariance(self.bestTeam)
+				print "$",self.computeTeamSalary(self.bestTeam)
 			newTeam = self.randomTeam()
 			newTeamPoints = self.computeTeamPoints(newTeam)
 			if newTeamPoints > self.bestPoints:
 				self.bestTeam = newTeam
 				self.bestPoints = newTeamPoints
-		print "team",self.bestTeam
-		print "salary",self.computeTeamSalary(self.bestTeam)
-		print "points",self.computeTeamPoints(self.bestTeam)
+		print "Maximize ", self.objectiveName
+		print "Team",self.bestTeam
+		print "NFPoints",self.computeNFPoints(self.bestTeam)
+		print "DKPoints",self.computeDKPoints(self.bestTeam)
+		print "TeamVar",self.computeTeamVariance(self.bestTeam)
+		print "$",self.computeTeamSalary(self.bestTeam)
+		pickle.dump(self.bestTeam,open("best.p","wb"))
 		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
 
 	def greedy(self):
