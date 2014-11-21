@@ -4,153 +4,318 @@ import os
 import itertools
 import random
 import datetime
+import cPickle as pickle
+
+class FantasyFootball:
+	def __init__(self):
+		self.qbs = []
+		self.rbs = []
+		self.wrs = []
+		self.tes = []
+		self.dsts = []
+		self.flexes = []
+		self.bestTeam = []
+		self.bestPoints = 0
+
+		self.importCSVsToBigList()
+		self.evaluateNtimes(50000000)
+		#self.greedy()
+		#self.makeCombinations()
+		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
+		#print len(self.qbs)*len(self.rbs)**2*len(self.wrs)**3*len(self.tes)*len(self.flexes)*len(self.dsts)
 
 
-def randomTeam(qbs,rbs,wrs,tes,dsts):
-	isLegal = False
-	while not isLegal:
-		team = [random.choice(qbs)]
-		team.extend(random.sample(rbs,2))
-		team.extend(random.sample(wrs,3))
-		team.append(random.choice(tes))
-		flexes = rbs+wrs+tes
-		while True:
-			flexChoice = random.choice(flexes)
-			if not flexChoice in team:
-				break
-		team.append(flexChoice)
-		team.append(random.choice(dsts))
-		teamSalary = 0
-		teamSalary = computeTeamSalary(team)
-		if teamSalary<=50000:
-			isLegal=True
 
-	return team
+	def randomTeam(self):
+		isLegal = False
+		while not isLegal:
+			team = [random.choice(self.qbs)]
+			team.extend(random.sample(self.rbs,2))
+			team.extend(random.sample(self.wrs,3))
+			team.append(random.choice(self.tes))
+			flexes = self.rbs+self.wrs+self.tes
+			while True:
+				flexChoice = random.choice(self.flexes)
+				if not flexChoice in team:
+					break
+			team.append(flexChoice)
+			team.append(random.choice(self.dsts))
+			teamSalary = 0
+			teamSalary = self.computeTeamSalary(team)
+			if teamSalary<=50000:
+				isLegal=True
+
+		return team
 
 
-def importCSVsToBigList():
-	curr = os.getcwd()
-	os.chdir(curr+"/week12/")
-	csvList = glob.glob('*.csv')
+	def importCSVsToBigList(self):
+		curr = os.getcwd()
+		os.chdir(curr+"/week12/")
+		csvList = glob.glob('*.csv')
 
-	players = []
+		players = []
 
-	for playerPage in csvList:
-		with open(playerPage,'rb') as csvfile:
-			reader = csv.reader(csvfile,delimiter=',',quotechar='|',quoting=csv.QUOTE_MINIMAL)
-			rowCount = 0
-			for row in reader:
-				if rowCount < 2:
+		for playerPage in csvList:
+			with open(playerPage,'rb') as csvfile:
+				reader = csv.reader(csvfile,delimiter=',',quotechar='|',quoting=csv.QUOTE_MINIMAL)
+				rowCount = 0
+				for row in reader:
+					if rowCount < 2:
+						rowCount+=1
+						continue
+
+					if playerPage == "dsts-Table 1.csv":
+						#[name,CI,numberFire FP, DK FP, Salary]
+						if float(row[11])<7:
+							continue
+						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:])]
+						players.append(playerData)
+
+					if playerPage == "qbs-Table 1.csv":
+						#[name,CI,numberFire FP, DK FP, Salary]
+						if float(row[14])<12:
+							continue
+						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:])]
+						players.append(playerData)
+
+					if playerPage == "rbs-Table 1.csv":
+						#[name,CI,numberFire FP, DK FP, Salary]
+						if float(row[13])<8:
+							continue
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						players.append(playerData)
+
+					if playerPage == "wrs-Table 1.csv":
+						#[name,CI,numberFire FP, DK FP, Salary]
+						if float(row[13])<8:
+							continue
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						players.append(playerData)
+
+					if playerPage == "tes-Table 1.csv":
+						#[name,CI,numberFire FP, DK FP, Salary]
+						if float(row[13])<5:
+							continue
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						#print playerData
+						#print playerData[4]
+						players.append(playerData)
+
 					rowCount+=1
+
+		for player in players:
+			if "(QB" in player[0]:
+				self.qbs.append(player)
+			elif "(RB" in player[0]:
+				self.rbs.append(player)
+			elif "(WR" in player[0]:
+				self.wrs.append(player)
+			elif "(TE" in player[0]:
+				self.tes.append(player)
+			elif "D/ST" in player[0]:
+				self.dsts.append(player)
+		self.flexes = self.rbs+self.wrs+self.tes
+
+		return None
+
+	def makeCombinations(self):
+		lengths = [len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)]
+		#some_list = [xrange(len(self.qbs)),xrange(len(self.rbs)),xrange(len(self.rbs)),
+		#	xrange(len(self.wrs)),xrange(len(self.wrs)),xrange(len(self.wrs)),
+		#	xrange(len(self.tes)),xrange(len(self.flexes)),xrange(len(self.dsts))]
+		some_list = [self.qbs[:5],self.rbs[:5],self.rbs[:5],self.wrs[:5],self.wrs[:5],self.wrs[:5],self.tes[:5],self.flexes[:5],self.dsts[:5]]
+		bigfucking = itertools.product(*some_list)
+		bigfuckinglist = []
+		for e in bigfucking:
+			bigfuckinglist.append(e)
+		#print bigfuckinglist
+		print len(bigfuckinglist)
+		pickle.dump(bigfuckinglist,open("combos.p","wb"))
+
+	#[QB,RB,RB,WR,WR,WR,TE,FLEX,DST]
+
+	def computeTeamPoints(self,team):
+		fpp = 0
+		for player in team:
+			fpp += player[3]
+		return fpp
+
+	def computeTeamSalary(self,team):
+		teamSalary = 0
+		for player in team:
+			teamSalary+=player[4]
+		return teamSalary
+
+	def evaluateNtimes(self,N):
+		self.bestTeam = self.randomTeam()
+		self.bestPoints = self.computeTeamPoints(self.bestTeam)
+		betterExists = True
+		for i in xrange(N):
+			newTeam = self.randomTeam()
+			newTeamPoints = self.computeTeamPoints(newTeam)
+			if newTeamPoints > self.bestPoints:
+				self.bestTeam = newTeam
+				self.bestPoints = newTeamPoints
+		print "team",self.bestTeam
+		print "salary",self.computeTeamSalary(self.bestTeam)
+		print "points",self.computeTeamPoints(self.bestTeam)
+		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
+
+	def greedy(self):
+		self.bestTeam = self.randomTeam()
+		print self.bestTeam
+		self.bestPoints = self.computeTeamPoints(self.bestTeam)
+		betterExists = True
+
+		while betterExists:
+			print "iter"
+
+			couldntFindAnything = True
+
+			for qb in self.qbs:
+				if qb==self.bestTeam[0]:
 					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[0]=qb
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new qb",qb
 
-				if playerPage == "dsts-Table 1.csv":
-					#[name,CI,numberFire FP, DK FP, Salary]
-					if float(row[11])<2:
-						continue
-					playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:])]
-					players.append(playerData)
+			for rb in self.rbs:
+				if rb in [self.bestTeam[1],self.bestTeam[2]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[1]=rb
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new rb",rb
 
-				if playerPage == "qbs-Table 1.csv":
-					#[name,CI,numberFire FP, DK FP, Salary]
-					if float(row[14])<3:
-						continue
-					playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:])]
-					players.append(playerData)
+			for rb in self.rbs:
+				if rb in [self.bestTeam[1],self.bestTeam[2]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[2]=rb
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new rb",rb
 
-				if playerPage == "rbs-Table 1.csv":
-					#[name,CI,numberFire FP, DK FP, Salary]
-					if float(row[13])<4:
-						continue
-					playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
-					players.append(playerData)
+			for wr in self.wrs:
+				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[3]=wr
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new wr",wr
 
-				if playerPage == "wrs-Table 1.csv":
-					#[name,CI,numberFire FP, DK FP, Salary]
-					if float(row[13])<4:
-						continue
-					playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
-					players.append(playerData)
+			for wr in self.wrs:
+				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[4]=wr
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new wr",wr
 
-				if playerPage == "tes-Table 1.csv":
-					#[name,CI,numberFire FP, DK FP, Salary]
-					if float(row[13])<3:
-						continue
-					playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
-					#print playerData
-					#print playerData[4]
-					players.append(playerData)
+			for wr in self.wrs:
+				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[5]=wr
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new wr",wr
 
-				rowCount+=1
-	qbs = []
-	rbs = []
-	wrs = []
-	tes = []
-	dsts = []
+			for te in self.tes:
+				if te==self.bestTeam[6]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[6]=te
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new te",te
 
-	for player in players:
-		if "(QB" in player[0]:
-			qbs.append(player)
-		elif "(RB" in player[0]:
-			rbs.append(player)
-		elif "(WR" in player[0]:
-			wrs.append(player)
-		elif "(TE" in player[0]:
-			tes.append(player)
-		elif "D/ST" in player[0]:
-			dsts.append(player)
+			for flex in self.flexes:
+				if flex in [self.bestTeam[1],self.bestTeam[2],self.bestTeam[3],self.bestTeam[4],self.bestTeam[5],self.bestTeam[6]]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[7]=flex
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new flex",flex
 
-	return qbs,rbs,wrs,tes,dsts
+			for dst in self.dsts:
+				if dst==self.bestTeam[8]:
+					continue
+				else:
+					newTeam = self.bestTeam
+					newTeam[8]=dst
+					ts = self.computeTeamSalary(newTeam)
+					if ts<=50000:
+						if self.computeTeamPoints(newTeam)>self.bestPoints:
+							self.bestTeam=newTeam
+							self.bestPoints = self.computeTeamPoints(newTeam)
+							couldntFindAnything=False
+							print "new dst",dst
 
+			if couldntFindAnything==True:
+				betterExists=False
 
-#[QB,RB,RB,WR,WR,WR,TE,FLEX,DST]
-
-def computeTeamPoints(team):
-	fpp = 0
-	for player in team:
-		fpp += player[3]
-	return fpp
-
-def computeTeamSalary(team):
-	teamSalary = 0
-	for player in team:
-		teamSalary+=player[4]
-	return teamSalary
-
-def evaluateNtimes(qbs,rbs,wrs,tes,dsts):
-	bestTeam = randomTeam(qbs,rbs,wrs,tes,dsts)
-	bestPoints = computeTeamPoints(bestTeam)
-	betterExists = True
-	for i in xrange(10000000):
-		newTeam = randomTeam(qbs,rbs,wrs,tes,dsts)
-		newTeamPoints = computeTeamPoints(newTeam)
-		if newTeamPoints > bestPoints:
-			bestTeam = newTeam
-			bestPoints = newTeamPoints
-	return bestTeam,computeTeamSalary(bestTeam),computeTeamPoints(bestTeam)
-
-def greedy(qbs,rbs,wrs,tes,dsts):
-	bestTeam = randomTeam(qbs,rbs,wrs,tes,dsts)
-	bestPoints = computeTeamPoints(bestTeam)
-	betterExists = True
-	for i in xrange(10000000):
-		newTeam = randomTeam(qbs,rbs,wrs,tes,dsts)
-		newTeamPoints = computeTeamPoints(newTeam)
-		if newTeamPoints > bestPoints:
-			bestTeam = newTeam
-			bestPoints = newTeamPoints
-	return bestTeam,computeTeamSalary(bestTeam),computeTeamPoints(bestTeam)
+		print "team",self.bestTeam
+		print "salary",self.computeTeamSalary(self.bestTeam)
+		print "points",self.computeTeamPoints(self.bestTeam)
+		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
 
 
 
-def main():
-	qbs,rbs,wrs,tes,dsts = importCSVsToBigList()
-	#print len(qbs),len(rbs),len(wrs),len(tes),len(dsts)
-	#print len(qbs)*len(rbs)*(len(rbs)-1)*len(wrs)*(len(wrs)-1)*(len(wrs)-2)*(len(wrs)+len(rbs)+len(tes)-6)*len(tes)*len(dsts)
-	print evaluateNtimes(qbs,rbs,wrs,tes,dsts)
+	def main(self):
+		self.qbs,self.rbs,self.wrs,self.tes,self.dsts = self.importCSVsToBigList()
+		#print len(qbs),len(rbs),len(wrs),len(tes),len(dsts)
+		#print len(qbs)*len(rbs)*(len(rbs)-1)*len(wrs)*(len(wrs)-1)*(len(wrs)-2)*(len(wrs)+len(rbs)+len(tes)-6)*len(tes)*len(dsts)
+		print self.evaluateNtimes(qbs,rbs,wrs,tes,dsts)
 
 print datetime.datetime.utcnow()
-main()
+x = FantasyFootball()
 print datetime.datetime.utcnow()
 
 
