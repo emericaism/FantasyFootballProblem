@@ -19,7 +19,7 @@ class FantasyFootball:
 		self.bestPoints = 0
 
 		self.salaryBound = 49500
-		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 		if self.objective==3:
 			self.objectiveName = "DK"
 		elif self.objective==2:
@@ -32,7 +32,7 @@ class FantasyFootball:
 
 		#self.useCurtailedPlayerLists()
 		self.importTeam()
-		self.evaluateNtimes(1000000)
+		self.evaluateNtimes(10000000)
 		#self.greedy()
 		#self.makeCombinations()
 		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
@@ -238,6 +238,17 @@ class FantasyFootball:
 		pickle.dump(self.bestTeam,open("best.p","wb"))
 		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
 
+	def searchParetoImprovement(self,team):
+		while True:
+			qb = team[0]
+			ts = self.computeTeamSalary(team)
+			for qbnew in self.qbs:
+				if qbnew!=qb:
+					if qbnew[self.objective]>=qb[self.objective]:
+						if qbnew[4]<=qb[4]+(50000-ts):
+							team[0] = qbnew
+							continue
+		return team
 	def greedy(self):
 		self.bestTeam = self.randomTeam()
 		print self.bestTeam
@@ -262,6 +273,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new qb",qb
+							continue
 
 			for rb in self.rbs:
 				if rb in [self.bestTeam[1],self.bestTeam[2]]:
@@ -276,6 +288,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new rb",rb
+							continue
 
 			for rb in self.rbs:
 				if rb in [self.bestTeam[1],self.bestTeam[2]]:
@@ -290,6 +303,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new rb",rb
+							continue
 
 			for wr in self.wrs:
 				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
@@ -304,6 +318,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new wr",wr
+							continue
 
 			for wr in self.wrs:
 				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
@@ -318,6 +333,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new wr",wr
+							continue
 
 			for wr in self.wrs:
 				if wr in [self.bestTeam[3],self.bestTeam[4],self.bestTeam[5]]:
@@ -332,6 +348,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new wr",wr
+							continue
 
 			for te in self.tes:
 				if te==self.bestTeam[6]:
@@ -346,6 +363,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new te",te
+							continue
 
 			for flex in self.flexes:
 				if flex in [self.bestTeam[1],self.bestTeam[2],self.bestTeam[3],self.bestTeam[4],self.bestTeam[5],self.bestTeam[6]]:
@@ -360,6 +378,7 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new flex",flex
+							continue
 
 			for dst in self.dsts:
 				if dst==self.bestTeam[8]:
@@ -374,8 +393,9 @@ class FantasyFootball:
 							self.bestPoints = self.computeTeamPoints(newTeam)
 							couldntFindAnything=False
 							print "new dst",dst
+							continue
 
-			if couldntFindAnything==True:
+			if couldntFindAnything:
 				betterExists=False
 
 		print "team",self.bestTeam
