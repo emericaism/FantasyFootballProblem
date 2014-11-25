@@ -33,7 +33,7 @@ class FantasyFootball:
 
 
 		#self.useCurtailedPlayerLists()
-		self.importTeam()
+		#self.importTeam()
 		self.evaluateNtimes(10000000)
 		#self.greedy()
 		#self.makeCombinations()
@@ -111,6 +111,8 @@ class FantasyFootball:
 						if float(row[13])<8:
 							continue
 						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						if "Jamaal Charles" in row[0]:
+							continue
 						players.append(playerData)
 
 					if playerPage == "wrs-Table 1.csv":
@@ -214,7 +216,7 @@ class FantasyFootball:
 		return teamVar
 
 	def evaluateNtimes(self,N):
-		#self.bestTeam = self.randomTeam()
+		self.bestTeam = self.randomTeam()
 		self.bestPoints = self.computeTeamPoints(self.bestTeam)
 		betterExists = True
 		for i in xrange(N):
