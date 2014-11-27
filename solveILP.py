@@ -17,9 +17,14 @@ class FantasyFootball:
 		self.flexes = []
 		self.bestTeam = []
 		self.bestPoints = 0
+		self.top5 = []
+		self.top5Pts = []
 
 		self.salaryBound = 49700
 		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+
+		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
+		self.MondayTeams = ['MIA','NYJ']
 
 
 		if self.objective==3:
@@ -27,18 +32,78 @@ class FantasyFootball:
 		elif self.objective==2:
 			self.objectiveName="NF"
 
-
-
 		self.importCSVsToBigList()
-
 
 		#self.useCurtailedPlayerLists()
 		#self.importTeam()
-		self.evaluateNtimes(10000000)
+		self.ThursdayOnly()
+		self.createTop5()
+		self.evaluateNtimesTop5(1000000)
 		#self.greedy()
 		#self.makeCombinations()
 		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
 		#print len(self.qbs)*len(self.rbs)**2*len(self.wrs)**3*len(self.tes)*len(self.flexes)*len(self.dsts)
+
+	def ThursdayOnly(self):
+		self.qbs = [x for x in self.qbs if (x[5] in self.ThursdayTeams)]
+		self.rbs = [x for x in self.rbs if (x[5] in self.ThursdayTeams)]
+		self.wrs = [x for x in self.wrs if (x[5] in self.ThursdayTeams)]
+		self.tes = [x for x in self.tes if (x[5] in self.ThursdayTeams)]
+		self.dsts = [x for x in self.dsts if (x[5] in self.ThursdayTeams)]
+		self.flexes = self.rbs+self.wrs+self.tes
+
+	def SundayOnly(self):
+		self.qbs = [x for x in self.qbs if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
+		self.rbs = [x for x in self.rbs if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
+		self.wrs = [x for x in self.wrs if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
+		self.tes = [x for x in self.tes if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
+		self.dsts = [x for x in self.dsts if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
+		self.flexes = self.rbs+self.wrs+self.tes
+
+	def MondayOnly(self):
+		self.qbs = [x for x in self.qbs if (x[5] in self.MondayTeams)]
+		self.rbs = [x for x in self.rbs if (x[5] in self.MondayTeams)]
+		self.wrs = [x for x in self.wrs if (x[5] in self.MondayTeams)]
+		self.tes = [x for x in self.tes if (x[5] in self.MondayTeams)]
+		self.dsts = [x for x in self.dsts if (x[5] in self.MondayTeams)]
+		self.flexes = self.rbs+self.wrs+self.tes
+
+	def SundayMondayOnly(self):
+		self.qbs = [x for x in self.qbs if not (x[5] in self.ThursdayTeams)]
+		self.rbs = [x for x in self.rbs if not (x[5] in self.ThursdayTeams)]
+		self.wrs = [x for x in self.wrs if not (x[5] in self.ThursdayTeams)]
+		self.tes = [x for x in self.tes if not (x[5] in self.ThursdayTeams)]
+		self.dsts = [x for x in self.dsts if not (x[5] in self.ThursdayTeams)]
+		self.flexes = self.rbs+self.wrs+self.tes
+
+
+	def createTop5(self):
+		for i in xrange(5):
+			self.top5.append(self.randomTeam())
+		for team in self.top5:
+			self.top5Pts.append(self.computeTeamPoints(team))
+
+		X = self.top5
+		Y = self.top5Pts
+
+		self.top5 = [x for (y,x) in sorted(zip(Y,X))]
+
+		del self.top5Pts[:]
+
+		for team in self.top5:
+			self.top5Pts.append(self.computeTeamPoints(team))
+
+	def compareWithTop5andUpdate(self,team):
+		betterThanIndex = -1
+		tp = self.computeTeamPoints(team)
+		for i in range(len(self.top5)):
+			if tp>self.top5Pts[i]:
+				betterThanIndex = i
+		if not betterThanIndex==-1:
+			self.top5.insert(betterThanIndex+1,team)
+			self.top5.pop(0)
+			self.top5Pts[i] = tp
+
 
 	def importTeam(self):
 		os.chdir("..")
@@ -78,7 +143,7 @@ class FantasyFootball:
 
 	def importCSVsToBigList(self):
 		curr = os.getcwd()
-		os.chdir(curr+"/week12/")
+		os.chdir(curr+"/week13/")
 		csvList = glob.glob('*.csv')
 
 		players = []
@@ -92,41 +157,40 @@ class FantasyFootball:
 						rowCount+=1
 						continue
 
+
 					if playerPage == "dsts-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[11])<7:
 							continue
-						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:])]
+						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "qbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[14])<12:
 							continue
-						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:])]
+						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "rbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
-						if "Jamaal Charles" in row[0]:
-							continue
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "wrs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "tes-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<5:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:])]
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						#print playerData
 						#print playerData[4]
 						players.append(playerData)
@@ -149,6 +213,8 @@ class FantasyFootball:
 		for playerList in [self.qbs,self.rbs,self.wrs,self.tes]:
 			for p in playerList:
 				p[0] = p[0][1:-4]
+				if p[1][0]=='-':
+					p[1]=p[1][1:]
 				ciList = [float(x) for x in p[1].split('-')]
 				p[1] = ciList
 
@@ -241,6 +307,32 @@ class FantasyFootball:
 		print "$",self.computeTeamSalary(self.bestTeam)
 		pickle.dump(self.bestTeam,open("best"+self.objectiveName+".p","wb"))
 		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
+
+	def evaluateNtimesTop5(self,N):
+		#self.bestTeam = self.randomTeam()
+		#self.bestPoints = self.computeTeamPoints(self.bestTeam)
+		#betterExists = True
+		for i in xrange(N):
+			if i%100000==0:
+				for topTeam in self.top5:
+					print "Iteration: ",i
+					print "Maximize ", self.objectiveName
+					print "Team",topTeam
+					print "NFPoints",self.computeNFPoints(topTeam)
+					print "DKPoints",self.computeDKPoints(topTeam)
+					print "TeamVar",self.computeTeamVariance(topTeam)
+					print "$",self.computeTeamSalary(topTeam)
+			newTeam = self.randomTeam()
+			self.compareWithTop5andUpdate(newTeam)
+		for topTeam in self.top5:
+			print "Iteration: ",i
+			print "Maximize ", self.objectiveName
+			print "Team",topTeam
+			print "NFPoints",self.computeNFPoints(topTeam)
+			print "DKPoints",self.computeDKPoints(topTeam)
+			print "TeamVar",self.computeTeamVariance(topTeam)
+			print "$",self.computeTeamSalary(topTeam)
+		pickle.dump(self.top5,open("best"+self.objectiveName+".p","wb"))
 
 	def searchParetoImprovement(self,team):
 		while True:

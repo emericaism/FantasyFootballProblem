@@ -33,14 +33,6 @@ import csv
 ####PUT FILENAME OF CSV FILE CONTAINING LIST OF STUDY SESSION IDs#####
 ####CSV should have one column of data only, containing only names of files, no title.###
 ##The following codes simply reads off the data from rows 1 to end and adds them to the list of studies to search for.
-csv_filename = 'sessionID.csv'
-studyIDs = []
-with open(csv_filename, 'rU') as csvfile:
-    rowreader = csv.reader(csvfile, dialect='excel')
-    currRow = 1
-    for row in rowreader:
-        studyIDs.append(row[0])
-print studyIDs
 
 
 
@@ -84,7 +76,7 @@ def downloadSession(sessionIDs):
     driver = webdriver.Firefox(firefox_profile=fp)
 
     #Go to ladon admin console
-    driver.get("http://ladon.mit.edu/admin/")
+    driver.get("https://www.fanduel.com/p/Home")
 
     #Find the box for the username click on it and enter the username
     inputElement = driver.find_element_by_name("username")
