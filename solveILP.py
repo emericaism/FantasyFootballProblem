@@ -37,7 +37,8 @@ class FantasyFootball:
 		#self.useCurtailedPlayerLists()
 		#self.importTeam()
 		#self.ThursdayOnly()
-		self.ThursdaySundayOnly()
+		#self.ThursdaySundayOnly()
+		self.SundayOnly()
 		self.createTop5()
 		self.evaluateNtimesTop5(10000000)
 
