@@ -102,7 +102,7 @@ class FantasyFootball:
 		if not betterThanIndex==-1:
 			self.top5.insert(betterThanIndex+1,team)
 			self.top5.pop(0)
-			self.top5Pts[i] = tp
+			self.top5Pts[betterThanIndex] = tp
 
 
 	def importTeam(self):
@@ -314,6 +314,7 @@ class FantasyFootball:
 		#betterExists = True
 		for i in xrange(N):
 			if i%100000==0:
+				print "\n"
 				for topTeam in self.top5:
 					print "Iteration: ",i
 					print "Maximize ", self.objectiveName
@@ -324,6 +325,7 @@ class FantasyFootball:
 					print "$",self.computeTeamSalary(topTeam)
 			newTeam = self.randomTeam()
 			self.compareWithTop5andUpdate(newTeam)
+		print "\n"
 		for topTeam in self.top5:
 			print "Iteration: ",i
 			print "Maximize ", self.objectiveName
@@ -332,7 +334,7 @@ class FantasyFootball:
 			print "DKPoints",self.computeDKPoints(topTeam)
 			print "TeamVar",self.computeTeamVariance(topTeam)
 			print "$",self.computeTeamSalary(topTeam)
-		pickle.dump(self.top5,open("best"+self.objectiveName+".p","wb"))
+		pickle.dump(self.top5,open("best5"+self.objectiveName+".p","wb"))
 
 	def searchParetoImprovement(self,team):
 		while True:
