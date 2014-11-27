@@ -21,7 +21,7 @@ class FantasyFootball:
 		self.top5Pts = []
 
 		self.salaryBound = 49700
-		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
 		self.MondayTeams = ['MIA','NYJ']
@@ -36,9 +36,11 @@ class FantasyFootball:
 
 		#self.useCurtailedPlayerLists()
 		#self.importTeam()
-		self.ThursdayOnly()
+		#self.ThursdayOnly()
+		self.ThursdaySundayOnly()
 		self.createTop5()
-		self.evaluateNtimesTop5(1000000)
+		self.evaluateNtimesTop5(10000000)
+
 		#self.greedy()
 		#self.makeCombinations()
 		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
@@ -76,8 +78,18 @@ class FantasyFootball:
 		self.dsts = [x for x in self.dsts if not (x[5] in self.ThursdayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
 
+	def ThursdaySundayOnly(self):
+		self.qbs = [x for x in self.qbs if not (x[5] in self.MondayTeams)]
+		self.rbs = [x for x in self.rbs if not (x[5] in self.MondayTeams)]
+		self.wrs = [x for x in self.wrs if not (x[5] in self.MondayTeams)]
+		self.tes = [x for x in self.tes if not (x[5] in self.MondayTeams)]
+		self.dsts = [x for x in self.dsts if not (x[5] in self.MondayTeams)]
+		self.flexes = self.rbs+self.wrs+self.tes
+
 
 	def createTop5(self):
+		self.top5 = []
+		self.top5Pts = []
 		for i in xrange(5):
 			self.top5.append(self.randomTeam())
 		for team in self.top5:
@@ -99,10 +111,15 @@ class FantasyFootball:
 		for i in range(len(self.top5)):
 			if tp>self.top5Pts[i]:
 				betterThanIndex = i
-		if not betterThanIndex==-1:
+			elif tp == self.top5Pts[i]:
+				betterThanIndex = -1
+				break
+		if (not betterThanIndex==-1) and (tp not in self.top5Pts):
 			self.top5.insert(betterThanIndex+1,team)
 			self.top5.pop(0)
-			self.top5Pts[betterThanIndex] = tp
+			self.top5Pts.insert(betterThanIndex+1,self.computeTeamPoints(team))
+			self.top5Pts.pop(0)
+
 
 
 	def importTeam(self):
