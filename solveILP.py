@@ -26,7 +26,7 @@ class FantasyFootball:
 		self.needsUpdate = False
 
 
-		self.salaryBound = 49700
+		self.salaryBound = 49800
 		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
@@ -44,11 +44,11 @@ class FantasyFootball:
 		#self.importTeam()
 		#self.ThursdayOnly()
 		#self.ThursdaySundayOnly()
-		#self.SundayMondayOnly()
-		self.SundayOnly()
+		self.SundayMondayOnly()
+		#self.SundayOnly()
 		#self.createTop5()
 		self.import5Teams()
-		self.evaluateNtimesTop5(10000000)
+		self.evaluateNtimesTop5(100000000)
 
 		#self.greedy()
 		#self.makeCombinations()
@@ -184,18 +184,8 @@ class FantasyFootball:
 			team.append(random.choice(self.dsts))
 			teamSalary = self.computeTeamSalary(team)
 			if teamSalary<=50000 and teamSalary>=self.salaryBound:
-				teamCurtailed = [x[0] for x in team]
-				setTeam = set(teamCurtailed)
-				if setTeam not in self.seenList:
-					self.seenList.append(setTeam)
-					print "SeenList: ",len(self.seenList), " howManyToGetAnUnseenValidTeam: ", howManyToGetAnUnseenValidTeam
-					isLegal = True
-				else:
-					self.sawARepeat+=1
-					print "Saw A Repeat",self.sawARepeat
-			howManyToGetAnUnseenValidTeam+=1
-			
-		#print team,self.computeTeamPoints(team),self.computeTeamSalary(team)
+				isLegal = True
+
 		return team
 
 
@@ -370,10 +360,8 @@ class FantasyFootball:
 		for i in xrange(N+1):
 			newTeam = self.randomTeam()
 			self.compareWithTop5andUpdate(newTeam)
-			if i%1000==0:
+			if i%100000==0:
 				self.printAndDump5(i)
-			if i%20000==0:
-				self.dumpSeenList()
 
 	def loadSeenList(self):
 		pickle.load(open("seenList"+self.objectiveName+self.dayName+".p","wb"))
