@@ -17,11 +17,15 @@ class FantasyFootball:
 		self.flexes = []
 		self.bestTeam = []
 		self.bestPoints = 0
+		self.counter = 0
 		self.top5 = []
 		self.top5Pts = []
+		self.seenList = []
+		self.dayName = ""
+
 
 		self.salaryBound = 49700
-		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
 		self.MondayTeams = ['MIA','NYJ']
@@ -38,8 +42,9 @@ class FantasyFootball:
 		#self.importTeam()
 		#self.ThursdayOnly()
 		#self.ThursdaySundayOnly()
-		self.SundayOnly()
-		self.createTop5()
+		self.SundayMondayOnly()
+		#self.createTop5()
+		self.import5Teams()
 		self.evaluateNtimesTop5(10000000)
 
 		#self.greedy()
@@ -54,6 +59,7 @@ class FantasyFootball:
 		self.tes = [x for x in self.tes if (x[5] in self.ThursdayTeams)]
 		self.dsts = [x for x in self.dsts if (x[5] in self.ThursdayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "Thursday"
 
 	def SundayOnly(self):
 		self.qbs = [x for x in self.qbs if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
@@ -62,6 +68,7 @@ class FantasyFootball:
 		self.tes = [x for x in self.tes if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
 		self.dsts = [x for x in self.dsts if not (x[5] in self.ThursdayTeams or x[5] in self.MondayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "Sunday"
 
 	def MondayOnly(self):
 		self.qbs = [x for x in self.qbs if (x[5] in self.MondayTeams)]
@@ -70,6 +77,7 @@ class FantasyFootball:
 		self.tes = [x for x in self.tes if (x[5] in self.MondayTeams)]
 		self.dsts = [x for x in self.dsts if (x[5] in self.MondayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "Monday"
 
 	def SundayMondayOnly(self):
 		self.qbs = [x for x in self.qbs if not (x[5] in self.ThursdayTeams)]
@@ -78,6 +86,7 @@ class FantasyFootball:
 		self.tes = [x for x in self.tes if not (x[5] in self.ThursdayTeams)]
 		self.dsts = [x for x in self.dsts if not (x[5] in self.ThursdayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "SundayMonday"
 
 	def ThursdaySundayOnly(self):
 		self.qbs = [x for x in self.qbs if not (x[5] in self.MondayTeams)]
@@ -86,6 +95,10 @@ class FantasyFootball:
 		self.tes = [x for x in self.tes if not (x[5] in self.MondayTeams)]
 		self.dsts = [x for x in self.dsts if not (x[5] in self.MondayTeams)]
 		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "ThursdaySunday"
+
+	def ThursdaySundayMonday(self):
+		self.dayName = "ThursdaySundayMonday"
 
 
 	def createTop5(self):
@@ -113,19 +126,33 @@ class FantasyFootball:
 			if tp>self.top5Pts[i]:
 				betterThanIndex = i
 			elif tp == self.top5Pts[i]:
-				betterThanIndex = -1
-				break
-		if (not betterThanIndex==-1) and (tp not in self.top5Pts):
+				teamCurtailed = [x[0] for x in team]
+				setTeam = set(teamCurtailed)
+				topTeamCurtailed = [x[0] for x in self.top5[i]]
+				setTopTeam = set(topTeamCurtailed)
+				print setTopTeam,setTeam
+				if setTopTeam==setTeam:
+					betterThanIndex = -1
+					break
+				else:
+					betterThanIndex=i
+		if not betterThanIndex==-1:
 			self.top5.insert(betterThanIndex+1,team)
 			self.top5.pop(0)
 			self.top5Pts.insert(betterThanIndex+1,self.computeTeamPoints(team))
 			self.top5Pts.pop(0)
+			self.counter+=1
+			print "Update Counter",self.counter
 
 
 
 	def importTeam(self):
 		os.chdir("..")
 		self.bestTeam = pickle.load(open("best"+self.objectiveName+".p","rb"))
+
+	def import5Teams(self):
+		os.chdir("..")
+		self.bestTeam = pickle.load(open("best5"+self.objectiveName+self.dayName+".p","rb"))		
 
 	def useCurtailedPlayerLists(self):
 		self.qbs = self.qbs[10:15]
@@ -152,9 +179,17 @@ class FantasyFootball:
 			team.append(random.choice(self.dsts))
 			teamSalary = self.computeTeamSalary(team)
 			if teamSalary<=50000 and teamSalary>=self.salaryBound:
-				isLegal=True
-
-
+				teamCurtailed = [x[0] for x in team]
+				setTeam = set(teamCurtailed)
+				print setTeam
+				if setTeam not in self.seenList:
+					self.seenList.append(setTeam)
+					print "Teams Seen in Salary Range",len(self.seenList)
+					isLegal = True
+				else:
+					print "continue"
+					continue
+			
 		#print team,self.computeTeamPoints(team),self.computeTeamSalary(team)
 		return team
 
@@ -327,22 +362,13 @@ class FantasyFootball:
 		return self.bestTeam,self.computeTeamSalary(self.bestTeam),self.computeTeamPoints(self.bestTeam)
 
 	def evaluateNtimesTop5(self,N):
-		#self.bestTeam = self.randomTeam()
-		#self.bestPoints = self.computeTeamPoints(self.bestTeam)
-		#betterExists = True
-		for i in xrange(N):
-			if i%100000==0:
-				print "\n"
-				for topTeam in self.top5:
-					print "Iteration: ",i
-					print "Maximize ", self.objectiveName
-					print "Team",topTeam
-					print "NFPoints",self.computeNFPoints(topTeam)
-					print "DKPoints",self.computeDKPoints(topTeam)
-					print "TeamVar",self.computeTeamVariance(topTeam)
-					print "$",self.computeTeamSalary(topTeam)
+		for i in xrange(N+1):
 			newTeam = self.randomTeam()
 			self.compareWithTop5andUpdate(newTeam)
+			if i%1000==0:
+				self.printAndDump5(i)
+	
+	def printAndDump5(self,i):
 		print "\n"
 		for topTeam in self.top5:
 			print "Iteration: ",i
@@ -352,7 +378,7 @@ class FantasyFootball:
 			print "DKPoints",self.computeDKPoints(topTeam)
 			print "TeamVar",self.computeTeamVariance(topTeam)
 			print "$",self.computeTeamSalary(topTeam)
-		pickle.dump(self.top5,open("best5"+self.objectiveName+".p","wb"))
+			pickle.dump(self.top5,open("best5"+self.objectiveName+self.dayName+".p","wb"))		
 
 	def searchParetoImprovement(self,team):
 		while True:
