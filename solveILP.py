@@ -44,8 +44,8 @@ class FantasyFootball:
 		#self.importTeam()
 		#self.ThursdayOnly()
 		#self.ThursdaySundayOnly()
-		self.SundayMondayOnly()
-		#self.SundayOnly()
+		#self.SundayMondayOnly()
+		self.SundayOnly()
 		#self.createTop5()
 		self.import5Teams()
 		self.evaluateNtimesTop5(100000000)
@@ -278,20 +278,6 @@ class FantasyFootball:
 
 		return None
 
-	def makeCombinations(self):
-		lengths = [len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)]
-		#some_list = [xrange(len(self.qbs)),xrange(len(self.rbs)),xrange(len(self.rbs)),
-		#	xrange(len(self.wrs)),xrange(len(self.wrs)),xrange(len(self.wrs)),
-		#	xrange(len(self.tes)),xrange(len(self.flexes)),xrange(len(self.dsts))]
-		some_list = [self.qbs[:5],self.rbs[:5],self.rbs[:5],self.wrs[:5],self.wrs[:5],self.wrs[:5],self.tes[:5],self.flexes[:5],self.dsts[:5]]
-		bigfcking = itertools.product(*some_list)
-		bigfckinglist = []
-		for e in bigfcking:
-			bigfckinglist.append(e)
-		#print bigfuckinglist
-		print len(bigfckinglist)
-		pickle.dump(bigfckinglist,open("combos.p","wb"))
-
 	#[QB,RB,RB,WR,WR,WR,TE,FLEX,DST]
 
 	def computeTeamPoints(self,team):
@@ -311,7 +297,6 @@ class FantasyFootball:
 		for player in team:
 			fpp+=player[2]
 		return fpp
-
 
 	def computeTeamSalary(self,team):
 		teamSalary = 0
