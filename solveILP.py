@@ -22,10 +22,11 @@ class FantasyFootball:
 		self.top5Pts = []
 		self.seenList = []
 		self.dayName = ""
+		self.sawARepeat = 0
 
 
 		self.salaryBound = 49700
-		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
 		self.MondayTeams = ['MIA','NYJ']
@@ -42,7 +43,8 @@ class FantasyFootball:
 		#self.importTeam()
 		#self.ThursdayOnly()
 		#self.ThursdaySundayOnly()
-		self.SundayMondayOnly()
+		#self.SundayMondayOnly()
+		self.SundayOnly()
 		#self.createTop5()
 		self.import5Teams()
 		self.evaluateNtimesTop5(10000000)
@@ -130,7 +132,6 @@ class FantasyFootball:
 				setTeam = set(teamCurtailed)
 				topTeamCurtailed = [x[0] for x in self.top5[i]]
 				setTopTeam = set(topTeamCurtailed)
-				print setTopTeam,setTeam
 				if setTopTeam==setTeam:
 					betterThanIndex = -1
 					break
@@ -142,7 +143,7 @@ class FantasyFootball:
 			self.top5Pts.insert(betterThanIndex+1,self.computeTeamPoints(team))
 			self.top5Pts.pop(0)
 			self.counter+=1
-			print "Update Counter",self.counter
+			print "Update Top5 Counter",self.counter
 
 
 
@@ -151,7 +152,6 @@ class FantasyFootball:
 		self.bestTeam = pickle.load(open("best"+self.objectiveName+".p","rb"))
 
 	def import5Teams(self):
-		os.chdir("..")
 		self.bestTeam = pickle.load(open("best5"+self.objectiveName+self.dayName+".p","rb"))		
 
 	def useCurtailedPlayerLists(self):
@@ -181,14 +181,13 @@ class FantasyFootball:
 			if teamSalary<=50000 and teamSalary>=self.salaryBound:
 				teamCurtailed = [x[0] for x in team]
 				setTeam = set(teamCurtailed)
-				print setTeam
 				if setTeam not in self.seenList:
 					self.seenList.append(setTeam)
-					print "Teams Seen in Salary Range",len(self.seenList)
+					print "SeenList Length",len(self.seenList)
 					isLegal = True
 				else:
-					print "continue"
-					continue
+					self.sawARepeat+=1
+					print "Saw A Repeat",self.sawARepeat
 			
 		#print team,self.computeTeamPoints(team),self.computeTeamSalary(team)
 		return team
@@ -373,6 +372,7 @@ class FantasyFootball:
 		for topTeam in self.top5:
 			print "Iteration: ",i
 			print "Maximize ", self.objectiveName
+			print "DayName", self.dayName
 			print "Team",topTeam
 			print "NFPoints",self.computeNFPoints(topTeam)
 			print "DKPoints",self.computeDKPoints(topTeam)
