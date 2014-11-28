@@ -23,6 +23,7 @@ class FantasyFootball:
 		self.seenList = []
 		self.dayName = ""
 		self.sawARepeat = 0
+		self.needsUpdate = False
 
 
 		self.salaryBound = 49700
@@ -143,6 +144,7 @@ class FantasyFootball:
 			self.top5Pts.insert(betterThanIndex+1,self.computeTeamPoints(team))
 			self.top5Pts.pop(0)
 			self.counter+=1
+			self.needsUpdate = True
 			print "Update Top5 Counter",self.counter
 
 
@@ -152,7 +154,9 @@ class FantasyFootball:
 		self.bestTeam = pickle.load(open("best"+self.objectiveName+".p","rb"))
 
 	def import5Teams(self):
-		self.bestTeam = pickle.load(open("best5"+self.objectiveName+self.dayName+".p","rb"))		
+		self.top5 = pickle.load(open("best5"+self.objectiveName+self.dayName+".p","rb"))
+		for team in self.top5:
+			self.top5Pts.append(self.computeTeamPoints(team))
 
 	def useCurtailedPlayerLists(self):
 		self.qbs = self.qbs[10:15]
@@ -165,6 +169,7 @@ class FantasyFootball:
 
 	def randomTeam(self):
 		isLegal = False
+		howManyToGetAnUnseenValidTeam = 0
 		while not isLegal:
 			team = [random.choice(self.qbs)]
 			team.extend(random.sample(self.rbs,2))
@@ -183,11 +188,12 @@ class FantasyFootball:
 				setTeam = set(teamCurtailed)
 				if setTeam not in self.seenList:
 					self.seenList.append(setTeam)
-					print "SeenList Length",len(self.seenList)
+					print "SeenList: ",len(self.seenList), " howManyToGetAnUnseenValidTeam: ", howManyToGetAnUnseenValidTeam
 					isLegal = True
 				else:
 					self.sawARepeat+=1
 					print "Saw A Repeat",self.sawARepeat
+			howManyToGetAnUnseenValidTeam+=1
 			
 		#print team,self.computeTeamPoints(team),self.computeTeamSalary(team)
 		return team
@@ -366,6 +372,14 @@ class FantasyFootball:
 			self.compareWithTop5andUpdate(newTeam)
 			if i%1000==0:
 				self.printAndDump5(i)
+			if i%20000==0:
+				self.dumpSeenList()
+
+	def loadSeenList(self):
+		pickle.load(open("seenList"+self.objectiveName+self.dayName+".p","wb"))
+
+	def dumpSeenList(self):
+		pickle.dump(self.seenList,open("seenList"+self.objectiveName+self.dayName+".p","wb"))
 	
 	def printAndDump5(self,i):
 		print "\n"
@@ -378,7 +392,10 @@ class FantasyFootball:
 			print "DKPoints",self.computeDKPoints(topTeam)
 			print "TeamVar",self.computeTeamVariance(topTeam)
 			print "$",self.computeTeamSalary(topTeam)
-			pickle.dump(self.top5,open("best5"+self.objectiveName+self.dayName+".p","wb"))		
+			if self.needsUpdate:
+				pickle.dump(self.top5,open("best5"+self.objectiveName+self.dayName+".p","wb"))
+				print "DUMP DUMP DUMP DUMP DUMP DUMP DUMP DUMP DUMP"
+				self.needsUpdate = False
 
 	def searchParetoImprovement(self,team):
 		while True:
