@@ -31,7 +31,8 @@ class FantasyFootball:
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
 		self.MondayTeams = ['MIA','NYJ']
-
+		self.SundayAfternoon = ['CLE','BUF','SD','BAL','CAR','MIN','CIN','TB','TEN','HOU','WAS','IND','NYG','JAC','NO','PIT','OAK','STL']
+		self.SundayPrimetime = ['ARI','ATL','NE','GB','DEN','KC']
 
 		if self.objective==3:
 			self.objectiveName = "DK"
@@ -45,15 +46,36 @@ class FantasyFootball:
 		#self.ThursdayOnly()
 		#self.ThursdaySundayOnly()
 		#self.SundayMondayOnly()
-		self.SundayOnly()
-		#self.createTop5()
-		self.import5Teams()
+		#self.SundayOnly()
+		self.SundayAfternoonOnly()
+		#self.SundayPrimetimeOnly()
+		self.createTop5()
+		#self.import5Teams()
 		self.evaluateNtimesTop5(100000000)
 
 		#self.greedy()
 		#self.makeCombinations()
 		#print len(self.qbs),len(self.rbs),len(self.wrs),len(self.tes),len(self.dsts)
 		#print len(self.qbs)*len(self.rbs)**2*len(self.wrs)**3*len(self.tes)*len(self.flexes)*len(self.dsts)
+
+
+	def SundayAfternoonOnly(self):
+		self.qbs = [x for x in self.qbs if (x[5] in self.SundayAfternoon)]
+		self.rbs = [x for x in self.rbs if (x[5] in self.SundayAfternoon)]
+		self.wrs = [x for x in self.wrs if (x[5] in self.SundayAfternoon)]
+		self.tes = [x for x in self.tes if (x[5] in self.SundayAfternoon)]
+		self.dsts = [x for x in self.dsts if (x[5] in self.SundayAfternoon)]
+		self.flexes = self.rbs+self.wrs+self.tes
+		self.dayName = "SundayAfternoon"
+
+	def SundayPrimetimeOnly(self):
+		self.qbs = [x for x in self.qbs if (x[5] in self.SundayPrimetime)]
+		self.rbs = [x for x in self.rbs if (x[5] in self.SundayPrimetime)]
+		self.wrs = [x for x in self.wrs if (x[5] in self.SundayPrimetime)]
+		self.tes = [x for x in self.tes if (x[5] in self.SundayPrimetime)]
+		self.dsts = [x for x in self.dsts if (x[5] in self.SundayPrimetime)]
+		self.flexes = self.rbs+self.wrs+self.dsts
+		self.dayName = "SundayPrimetime"
 
 	def ThursdayOnly(self):
 		self.qbs = [x for x in self.qbs if (x[5] in self.ThursdayTeams)]
