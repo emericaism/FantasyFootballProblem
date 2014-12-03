@@ -27,12 +27,12 @@ class FantasyFootball:
 
 
 		self.salaryBound = 49800
-		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
 		self.MondayTeams = ['MIA','NYJ']
 		self.SundayAfternoon = ['CLE','BUF','SD','BAL','CAR','MIN','CIN','TB','TEN','HOU','WAS','IND','NYG','JAC','NO','PIT','OAK','STL']
-		self.SundayPrimetime = ['ARI','ATL','NE','GB','DEN','KC']
+		self.SundayPrimetime = ['ARI','ATL','NE','GB','DEN','KC']+self.MondayTeams
 
 		if self.objective==3:
 			self.objectiveName = "DK"
@@ -47,8 +47,9 @@ class FantasyFootball:
 		#self.ThursdaySundayOnly()
 		#self.SundayMondayOnly()
 		#self.SundayOnly()
-		self.SundayAfternoonOnly()
+		#self.SundayAfternoonOnly()
 		#self.SundayPrimetimeOnly()
+		self.MondayOnly()
 		self.createTop5()
 		#self.import5Teams()
 		self.evaluateNtimesTop5(100000000)
@@ -74,7 +75,7 @@ class FantasyFootball:
 		self.wrs = [x for x in self.wrs if (x[5] in self.SundayPrimetime)]
 		self.tes = [x for x in self.tes if (x[5] in self.SundayPrimetime)]
 		self.dsts = [x for x in self.dsts if (x[5] in self.SundayPrimetime)]
-		self.flexes = self.rbs+self.wrs+self.dsts
+		self.flexes = self.rbs+self.wrs+self.tes
 		self.dayName = "SundayPrimetime"
 
 	def ThursdayOnly(self):
