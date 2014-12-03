@@ -27,10 +27,10 @@ class FantasyFootball:
 
 
 		self.salaryBound = 49800
-		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 
-		self.ThursdayTeams = ['CHI','DET','PHI','DAL','SEA','SF']
-		self.MondayTeams = ['MIA','NYJ']
+		self.ThursdayTeams = ['CHI','DAL']
+		self.MondayTeams = ['ATL','GB']
 		self.SundayAfternoon = ['CLE','BUF','SD','BAL','CAR','MIN','CIN','TB','TEN','HOU','WAS','IND','NYG','JAC','NO','PIT','OAK','STL']
 		self.SundayPrimetime = ['ARI','ATL','NE','GB','DEN','KC']+self.MondayTeams
 
@@ -44,12 +44,12 @@ class FantasyFootball:
 		#self.useCurtailedPlayerLists()
 		#self.importTeam()
 		#self.ThursdayOnly()
-		#self.ThursdaySundayOnly()
+		self.ThursdaySundayOnly()
 		#self.SundayMondayOnly()
 		#self.SundayOnly()
 		#self.SundayAfternoonOnly()
 		#self.SundayPrimetimeOnly()
-		self.MondayOnly()
+		#self.MondayOnly()
 		self.createTop5()
 		#self.import5Teams()
 		self.evaluateNtimesTop5(100000000)
@@ -214,7 +214,7 @@ class FantasyFootball:
 
 	def importCSVsToBigList(self):
 		curr = os.getcwd()
-		os.chdir(curr+"/week13/")
+		os.chdir(curr+"/week14/")
 		csvList = glob.glob('*.csv')
 
 		players = []
@@ -228,44 +228,47 @@ class FantasyFootball:
 						rowCount+=1
 						continue
 
-
 					if playerPage == "dsts-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[11])<7:
 							continue
-						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:]),row[2]]
+						print row
+						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][2:-2]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "qbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[14])<12:
 							continue
-						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:]),row[2]]
+						print row
+						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][2:-2]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "rbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
+						print row
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "wrs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
+						print row
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "tes-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<5:
 							continue
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
+						print row
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
 						#print playerData
 						#print playerData[4]
 						players.append(playerData)
-
 					rowCount+=1
 
 		for player in players:
@@ -283,6 +286,7 @@ class FantasyFootball:
 
 		for playerList in [self.qbs,self.rbs,self.wrs,self.tes]:
 			for p in playerList:
+				print p
 				p[0] = p[0][1:-4]
 				if p[1][0]=='-':
 					p[1]=p[1][1:]
@@ -298,6 +302,7 @@ class FantasyFootball:
 				ciList[0] = -1*ciList[0]
 			dst[1] = ciList
 
+		
 
 		return None
 
@@ -329,6 +334,7 @@ class FantasyFootball:
 
 	def computeTeamVariance(self,team):
 		teamVar = 0
+		print team
 		for player in team:
 			ci = player[1]
 			midpt = sum(ci) / float(len(ci))
