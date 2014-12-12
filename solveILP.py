@@ -29,10 +29,10 @@ class FantasyFootball:
 		self.salaryBound = 49800
 		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
 
-		self.ThursdayTeams = ['CHI','DAL']
-		self.MondayTeams = ['ATL','GB']
-		self.SundayAfternoon = ['CLE','BUF','SD','BAL','CAR','MIN','CIN','TB','TEN','HOU','WAS','IND','NYG','JAC','NO','PIT','OAK','STL']
-		self.SundayPrimetime = ['ARI','ATL','NE','GB','DEN','KC']+self.MondayTeams
+		self.ThursdayTeams = ['ARI','STL']
+		self.MondayTeams = ['CHI','NO']
+		self.SundayAfternoon=['GB','BUF','JAC','BAL','CIN','CLE','TB','CAR','HOU','IND','OAK','KC','MIA','NE','WAS','NYG','PIT','ATL']
+		self.SundayPrimetime=['DEN','SD','NYJ','TEN','MIN','DET','SF','SEA','DAL','PHI']
 
 		if self.objective==3:
 			self.objectiveName = "DK"
@@ -44,7 +44,7 @@ class FantasyFootball:
 		#self.useCurtailedPlayerLists()
 		#self.importTeam()
 		#self.ThursdayOnly()
-		self.ThursdaySundayOnly()
+		#self.ThursdaySundayOnly()
 		#self.SundayMondayOnly()
 		#self.SundayOnly()
 		#self.SundayAfternoonOnly()
@@ -144,6 +144,7 @@ class FantasyFootball:
 
 		for team in self.top5:
 			self.top5Pts.append(self.computeTeamPoints(team))
+		print self.top5
 
 	def compareWithTop5andUpdate(self,team):
 		betterThanIndex = -1
@@ -214,7 +215,7 @@ class FantasyFootball:
 
 	def importCSVsToBigList(self):
 		curr = os.getcwd()
-		os.chdir(curr+"/week14/")
+		os.chdir(curr+"/week15/")
 		csvList = glob.glob('*.csv')
 
 		players = []
@@ -224,48 +225,45 @@ class FantasyFootball:
 				reader = csv.reader(csvfile,delimiter=',',quotechar='|',quoting=csv.QUOTE_MINIMAL)
 				rowCount = 0
 				for row in reader:
-					if rowCount < 2:
+					if rowCount < 2 or row[0] == '':
 						rowCount+=1
 						continue
+					print row
 
 					if playerPage == "dsts-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[11])<7:
 							continue
-						print row
-						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][2:-2]),row[2]]
+						playerData=[row[0],row[10],float(row[11]),float(row[12]),int(row[13][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "qbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[14])<12:
 							continue
-						print row
-						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][2:-2]),row[2]]
+						playerData=[row[0],row[13],float(row[14]),float(row[15]),int(row[16][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "rbs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						print row
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						players.append(playerData)
+
 
 					if playerPage == "wrs-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<8:
 							continue
-						print row
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						players.append(playerData)
 
 					if playerPage == "tes-Table 1.csv":
 						#[name,CI,numberFire FP, DK FP, Salary]
 						if float(row[13])<5:
 							continue
-						print row
-						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][2:-2]),row[2]]
+						playerData=[row[0],row[12],float(row[13]),float(row[14]),int(row[15][1:]),row[2]]
 						#print playerData
 						#print playerData[4]
 						players.append(playerData)
@@ -286,7 +284,6 @@ class FantasyFootball:
 
 		for playerList in [self.qbs,self.rbs,self.wrs,self.tes]:
 			for p in playerList:
-				print p
 				p[0] = p[0][1:-4]
 				if p[1][0]=='-':
 					p[1]=p[1][1:]
@@ -303,7 +300,11 @@ class FantasyFootball:
 			dst[1] = ciList
 
 		
-
+		print self.qbs
+		print self.rbs
+		print self.wrs
+		print self.tes
+		print self.dsts
 		return None
 
 	#[QB,RB,RB,WR,WR,WR,TE,FLEX,DST]
@@ -334,8 +335,9 @@ class FantasyFootball:
 
 	def computeTeamVariance(self,team):
 		teamVar = 0
-		print team
+		#print team
 		for player in team:
+			print player
 			ci = player[1]
 			midpt = sum(ci) / float(len(ci))
 			var = ci[1]-midpt/1.96
@@ -348,7 +350,7 @@ class FantasyFootball:
 		self.bestPoints = self.computeTeamPoints(self.bestTeam)
 		betterExists = True
 		for i in xrange(N):
-			if i%100000==0:
+			if i%100==0:
 				print "Iteration: ",i
 				print "Maximize ", self.objectiveName
 				print "Team",self.bestTeam
@@ -399,6 +401,10 @@ class FantasyFootball:
 				print "DUMP DUMP DUMP DUMP DUMP DUMP DUMP DUMP DUMP"
 				self.needsUpdate = False
 
+
+	def printTeam(self,team):
+		for player in team:
+			print player
 	def searchParetoImprovement(self,team):
 		while True:
 			qb = team[0]
