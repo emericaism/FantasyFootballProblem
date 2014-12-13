@@ -27,7 +27,7 @@ class FantasyFootball:
 
 
 		self.salaryBound = 49800
-		self.objective=2 #3 maximizes DK Points, 2 maximizes NF Points
+		self.objective=3 #3 maximizes DK Points, 2 maximizes NF Points
 
 		self.ThursdayTeams = ['ARI','STL']
 		self.MondayTeams = ['CHI','NO']
